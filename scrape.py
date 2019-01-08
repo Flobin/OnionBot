@@ -18,15 +18,24 @@ with open('headlines.csv', 'r+') as headlines:
         headlines_list.append(row[0])
 
     # start looping the pages
-    for counter in range(0,1000):
+    for counter in range(0,10):
         response = requests.get(base_url + extra)
         html = response.content
         page_content = BeautifulSoup(html, "html.parser")
 
         # find all headlines
+        headlines_data = page_content.find_all(attrs={'data-contenttype': 'Headline'})
         headlines_class = page_content.find_all(class_='headline')
 
         # for each headline, get the text and add it if it doesn't exist yet
+        for item in headlines_data:
+            headline = item.text
+            if headline in headlines_list:
+                pass
+            else:
+                writer = csv.writer(headlines, delimiter=',')
+                writer.writerow([headline])
+
         for item in headlines_class:
             headline = item.text
             if headline in headlines_list:

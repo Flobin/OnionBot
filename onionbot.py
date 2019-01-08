@@ -65,17 +65,25 @@ def scrape_site():
             page_content = BeautifulSoup(html, "html.parser")
 
             # find all headlines
+            headlines_data = page_content.find_all(attrs={'data-contenttype': 'Headline'})
             headlines_class = page_content.find_all(class_='headline')
 
             # for each headline, get the text and add it if it doesn't exist yet
-            for item in headlines_class:
+            for item in headlines_data:
                 headline = item.text
                 if headline in headlines_list:
                     pass
                 else:
                     writer = csv.writer(headlines, delimiter=',')
                     writer.writerow([headline])
-                    headlines_list.append(headline) # have to put it in headlines_list as well otherwise you get doubles
+
+            for item in headlines_class:
+                headline = item.text
+                if headline in headlines_list:
+                    pass
+                else:
+                    writer = csv.writer(headlines, delimiter=',')
+                    writer.writerow([headline]) # have to put it in headlines_list as well otherwise you get doubles
 
             # find the load more button to load the next page
             load_more_button = page_content.find(attrs={'class': 'load-more__button'})
