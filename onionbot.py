@@ -1,7 +1,7 @@
 import tweepy
 from pprint import pprint
 from time import sleep
-from credentials import *
+# from credentials import *
 import markovify
 import datetime
 import feedparser
