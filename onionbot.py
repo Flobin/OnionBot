@@ -8,6 +8,12 @@ import feedparser
 import ssl
 import csv
 import itertools
+from os import environ
+
+CONSUMER_KEY = environ['CONSUMER_KEY']
+CONSUMER_SECRET = environ['CONSUMER_SECRET']
+ACCESS_TOKEN = environ['ACCESS_TOKEN']
+ACCESS_TOKEN_SECRET = environ['ACCESS_TOKEN_SECRET']
 
 def check_rss():
     ssl._create_default_https_context = ssl._create_unverified_context
@@ -48,8 +54,8 @@ def make_headline():
     # make a new headline no more than 280 characters long
     return text_model.make_short_sentence(280)
 
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
+auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
+auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth)
 
 now = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
