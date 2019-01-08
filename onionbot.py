@@ -3,13 +3,44 @@ from pprint import pprint
 from time import sleep
 from credentials import *
 import markovify
-import csv
 import datetime
+import feedparser
+import ssl
+import csv
+import itertools
+
+def check_rss():
+    ssl._create_default_https_context = ssl._create_unverified_context
+    d = feedparser.parse('https://www.theonion.com/rss')
+
+    headlines_list = []
+
+    with open('headlines.csv', 'r+') as headlines:
+        
+        # check all the headlines in the rss feed
+        for entry in d['entries']:
+
+            # get the headline
+            headline = entry['title']
+
+            reader = csv.reader(headlines, delimiter=',')
+
+            # put first 1000 headlines into list, should be enough
+            for row in itertools.islice(reader, 1000):
+                headlines_list.append(row[0])
+
+            # add new headlines to csv file
+            if headline in headlines_list:
+                pass
+            else:
+                writer = csv.writer(headlines, delimiter=',')
+                writer.writerow([headline])
+
 
 def make_headline():
     # Get raw text as string.
-    with open("headlines.csv") as f:
-        text = f.read()
+    with open("headlines.csv") as headlines:
+        text = headlines.read()
 
     # Build the model.
     text_model = markovify.NewlineText(text, state_size=3)
@@ -35,4 +66,5 @@ def update_status():
         log_write.write(str(now + ' - ' + e.reason))
         log_write.close()
 
+check_rss()
 update_status()

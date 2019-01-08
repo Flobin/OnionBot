@@ -1,6 +1,7 @@
 import feedparser
 import ssl
 import csv
+import itertools
 
 
 ssl._create_default_https_context = ssl._create_unverified_context
@@ -8,8 +9,7 @@ d = feedparser.parse('https://www.theonion.com/rss')
 
 headlines_list = []
 
-# only get first 200 rows, that should be enough
-with open('headlines.csv', 'r+').readlines()[0: 199] as headlines:
+with open('headlines.csv', 'r+') as headlines:
     
     # check all the headlines in the rss feed
     for entry in d['entries']:
@@ -19,8 +19,8 @@ with open('headlines.csv', 'r+').readlines()[0: 199] as headlines:
 
         reader = csv.reader(headlines, delimiter=',')
 
-        # put headlines into list
-        for row in reader:
+        # put first 1000 headlines into list, should be enough
+        for row in itertools.islice(reader, 1000):
             headlines_list.append(row[0])
 
         # add new headlines to csv file
