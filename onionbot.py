@@ -7,8 +7,9 @@ import datetime
 import feedparser
 import ssl
 import csv
-import itertools
 from os import environ
+import requests
+from bs4 import BeautifulSoup
 
 CONSUMER_KEY = environ['CONSUMER_KEY']
 CONSUMER_SECRET = environ['CONSUMER_SECRET']
@@ -32,7 +33,7 @@ def check_rss():
             reader = csv.reader(headlines, delimiter=',')
 
             # put first 1000 headlines into list, should be enough
-            for row in itertools.islice(reader, 1000):
+            for row in reader:
                 headlines_list.append(row[0])
 
             # add new headlines to csv file
@@ -41,6 +42,48 @@ def check_rss():
             else:
                 writer = csv.writer(headlines, delimiter=',')
                 writer.writerow([headline])
+                headlines_list.append(headline) # have to put it in headlines_list as well otherwise you get doubles
+
+
+def scrape_site():
+    base_url = 'https://www.theonion.com/'
+    extra = ''
+
+    headlines_list = []
+
+    with open('headlines.csv', 'r+') as headlines:
+
+        # put existing headlines in list
+        reader = csv.reader(headlines, delimiter=',')
+        for row in reader:
+            headlines_list.append(row[0])
+
+        # start looping the pages
+        for counter in range(0,2):
+            response = requests.get(base_url + extra)
+            html = response.content
+            page_content = BeautifulSoup(html, "html.parser")
+
+            # find all headlines
+            headlines_class = page_content.find_all(class_='headline')
+
+            # for each headline, get the text and add it if it doesn't exist yet
+            for item in headlines_class:
+                headline = item.text
+                if headline in headlines_list:
+                    pass
+                else:
+                    writer = csv.writer(headlines, delimiter=',')
+                    writer.writerow([headline])
+                    headlines_list.append(headline) # have to put it in headlines_list as well otherwise you get doubles
+
+            # find the load more button to load the next page
+            load_more_button = page_content.find(attrs={'class': 'load-more__button'})
+            load_more_link = load_more_button.find('a').get('href')
+
+            # increase the counter, build the next page link
+            counter += 1
+            extra = load_more_link
 
 
 def make_headline():
@@ -53,12 +96,14 @@ def make_headline():
 
     # make a new headline no more than 280 characters long
     return text_model.make_short_sentence(280)
+    
 
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth)
 
 now = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+
 
 def update_status():
     tweet = make_headline()
@@ -72,5 +117,7 @@ def update_status():
         log_write.write(str(now + ' - ' + e.reason))
         log_write.close()
 
+
 check_rss()
+scrape_site()
 update_status()
