@@ -10,6 +10,7 @@ import csv
 from os import environ
 import requests
 from bs4 import BeautifulSoup
+import random
 
 CONSUMER_KEY = environ['CONSUMER_KEY']
 CONSUMER_SECRET = environ['CONSUMER_SECRET']
@@ -65,33 +66,26 @@ def scrape_site():
             page_content = BeautifulSoup(html, "html.parser")
 
             # find all headlines
-            headlines_data = page_content.find_all(attrs={'data-contenttype': 'Headline'})
-            headlines_class = page_content.find_all(class_='headline')
+            headlines_on_page = page_content.select('.content-meta__headline h6, .content-meta__headline h3, .content-meta__headline__wrapper h5, article.js_post_item h1')
 
             # for each headline, get the text and add it if it doesn't exist yet
-            for item in headlines_data:
+            for item in headlines_on_page:
                 headline = item.text
                 if headline in headlines_list:
+                    headline_existing_count += 1
                     pass
                 else:
+                    headline_new_count += 1
                     writer = csv.writer(headlines, delimiter=',')
                     writer.writerow([headline])
 
-            for item in headlines_class:
-                headline = item.text
-                if headline in headlines_list:
-                    pass
-                else:
-                    writer = csv.writer(headlines, delimiter=',')
-                    writer.writerow([headline]) # have to put it in headlines_list as well otherwise you get doubles
-
             # find the load more button to load the next page
-            load_more_button = page_content.find(attrs={'class': 'load-more__button'})
-            load_more_link = load_more_button.find('a').get('href')
+            load_more_link = page_content.find(attrs={'data-ga': '[["Front page click","More stories click"]]'}).get('href')
 
             # increase the counter, build the next page link
             counter += 1
-            extra = load_more_link
+            if load_more_link is not None:
+                extra = load_more_link
 
 
 def make_headline():
@@ -100,7 +94,8 @@ def make_headline():
         text = headlines.read()
 
     # Build the model.
-    text_model = markovify.NewlineText(text, state_size=3)
+    more_or_less_random = random.randrange(2,4)
+    text_model = markovify.NewlineText(text, state_size=more_or_less_random)
 
     # make a new headline no more than 280 characters long
     return text_model.make_short_sentence(280)
