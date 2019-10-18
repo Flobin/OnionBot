@@ -119,6 +119,11 @@ def update_status():
         log_write.close()
 
 
-check_rss()
-scrape_site()
-update_status()
+try:
+    check_rss()
+    scrape_site()
+except:
+    log_write = open("log.txt", "w")
+    log_write.write(str(now))
+finally:
+    update_status()

@@ -87,5 +87,4 @@ build/
 tests/report/
 db.sqlite3
 credentials.py
-log.txt
 assets/
