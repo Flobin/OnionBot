@@ -72,10 +72,8 @@ def scrape_site():
             for item in headlines_on_page:
                 headline = item.text
                 if headline in headlines_list:
-                    headline_existing_count += 1
                     pass
                 else:
-                    headline_new_count += 1
                     writer = csv.writer(headlines, delimiter=',')
                     writer.writerow([headline])
 
